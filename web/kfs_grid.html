@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KFS Grid Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            display: flex;
+            gap: 50px;
+            align-items: flex-start;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 500px;
+            flex-shrink: 0;
+            flex-grow: 0;
+        }
+        
+        .button {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: box-shadow 0.2s, opacity 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .button:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            opacity: 0.9;
+        }
+        
+        .button.active {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0.8;
+        }
+        
+        .kfs1-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .kfs2-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .kfs-fake-btn {
+            background-color: #9E9E9E;
+            color: white;
+        }
+        
+        .random-btn {
+            background-color: #FF9800;
+            color: white;
+            margin-top: 10px;
+        }
+        
+        .clear-btn {
+            background-color: #6c757d;
+            color: white;
+            margin-top: 10px;
+        }
+        
+        .grid-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            grid-template-rows: repeat(4, 120px);
+            gap: 3px;
+            background-color: #333;
+            padding: 3px;
+            border-radius: 8px;
+        }
+        
+        .cell {
+            background-color: white;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .cell:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .cell.kfs1 {
+            background-color: rgba(0, 0, 255, 0.3);
+            color: blue;
+        }
+        
+        .cell.kfs2 {
+            background-color: rgba(255, 0, 0, 0.3);
+            color: red;
+        }
+        
+        .cell.kfs-fake {
+            background-color: rgba(128, 128, 128, 0.3);
+            color: gray;
+        }
+        
+        .cell.disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+            color: #999;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e8f5e8;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+        
+        .counts {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .count {
+            margin: 5px 0;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>KFS Grid Interface</h1>
+    
+    <div class="container">
+        <div class="controls">
+            <button class="button kfs1-btn" id="kfs1-btn" onclick="selectMode('kfs1')">
+                KFS1 (Blue)
+            </button>
+            <button class="button kfs2-btn" id="kfs2-btn" onclick="selectMode('kfs2')">
+                KFS2 (Red)
+            </button>
+            <button class="button kfs-fake-btn" id="kfs-fake-btn" onclick="selectMode('kfs-fake')">
+                KFS Fake (Gray)
+            </button>
+            
+            <button class="button publish-btn" onclick="publishGrid()">
+                Publish to ROS2
+            </button>
+            
+            <button class="button clear-btn" onclick="clearGrid()">
+                Clear Grid
+            </button>
+            
+            <button class="button random-btn" onclick="randomPlacement()">
+                Random Placement (Max)
+            </button>
+            
+            <div class="counts">
+                <div class="count">KFS1: <span id="kfs1-count">0</span>/3</div>
+                <div class="count">KFS2: <span id="kfs2-count">0</span>/4</div>
+                <div class="count">KFS Fake: <span id="kfs-fake-count">0</span>/1</div>
+            </div>
+            
+            <div class="status" id="status">
+                Select a marker type and click on grid cells to place them
+            </div>
+        </div>
+        
+        <div class="grid-container">
+            <h3>Grid (4 rows × 3 columns)</h3>
+            <div class="grid" id="grid">
+                <!-- Grid cells will be generated by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h3>Placement Rules:</h3>
+        <ul>
+            <li><strong>KFS1 (Blue):</strong> Only leftmost and rightmost columns, maximum 3 total</li>
+            <li><strong>KFS2 (Red):</strong> Cannot be placed in first row, maximum 4 total</li>
+            <li><strong>KFS Fake (Gray):</strong> Cannot be placed in first row, maximum 1 total</li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/roslib@1.3.0/build/roslib.min.js"></script>
+    <script>
+        // Grid state
+        let grid = Array(4).fill().map(() => Array(3).fill(0)); // 4 rows × 3 columns
+        let selectedMode = null;
+        let counts = { 'kfs1': 0, 'kfs2': 0, 'kfs-fake': 0 };
+        
+        // ROS connection
+        let ros = new ROSLIB.Ros({
+            url: 'ws://localhost:9090'
+        });
+        
+        ros.on('connection', function() {
+            console.log('Connected to ROS');
+            document.getElementById('status').textContent = 'Connected to ROS2';
+        });
+        
+        ros.on('error', function(error) {
+            console.log('Error connecting to ROS:', error);
+            document.getElementById('status').textContent = 'Error connecting to ROS2';
+        });
+        
+        ros.on('close', function() {
+            console.log('Connection to ROS closed');
+            document.getElementById('status').textContent = 'Disconnected from ROS2';
+        });
+        
+        // Create publisher
+        const gridPublisher = new ROSLIB.Topic({
+            ros: ros,
+            name: '/kfs_grid_data',
+            messageType: 'std_msgs/String'
+        });
+        
+        // Initialize grid
+        function initializeGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            
+            for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 3; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `cell-${row}-${col}`;
+                    cell.textContent = `${row},${col}`;
+                    cell.onclick = () => placeMarker(row, col);
+                    gridElement.appendChild(cell);
+                }
+            }
+            
+            updateCellStates();
+        }
+        
+        // Select marker mode
+        function selectMode(mode) {
+            selectedMode = mode;
+            
+            // Update button states
+            document.querySelectorAll('.button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`${mode}-btn`).classList.add('active');
+            
+            updateCellStates();
+            document.getElementById('status').textContent = `Selected: ${mode.toUpperCase()}. Click on valid cells to place markers.`;
+        }
+        
+        // Place marker on grid
+        function placeMarker(row, col) {
+            if (!selectedMode) {
+                document.getElementById('status').textContent = 'Please select a marker type first';
+                return;
+            }
+            
+            // Check if cell is already occupied
+            if (grid[row][col] !== 0) {
+                document.getElementById('status').textContent = 'Cell is already occupied';
+                return;
+            }
+            
+            // Check placement rules
+            if (!canPlaceMarker(selectedMode, row, col)) {
+                return;
+            }
+            
+            // Place marker
+            grid[row][col] = getMarkerValue(selectedMode);
+            counts[selectedMode]++;
+            
+            updateCellStates();
+            updateCounts();
+            
+            document.getElementById('status').textContent = `Placed ${selectedMode.toUpperCase()} at (${row}, ${col})`;
+        }
+        
+        // Check if marker can be placed
+        function canPlaceMarker(mode, row, col) {
+            switch (mode) {
+                case 'kfs1':
+                    if (counts.kfs1 >= 3) {
+                        document.getElementById('status').textContent = 'Maximum KFS1 markers reached (3)';
+                        return false;
+                    }
+                    if (col !== 0 && col !== 2) { // Only leftmost (0) and rightmost (2) columns
+                        document.getElementById('status').textContent = 'KFS1 can only be placed in leftmost or rightmost columns';
+                        return false;
+                    }
+                    break;
+                    
+                case 'kfs2':
+                    if (counts.kfs2 >= 4) {
+                        document.getElementById('status').textContent = 'Maximum KFS2 markers reached (4)';
+                        return false;
+                    }
+                    if (row === 0) { // Cannot be in first row
+                        document.getElementById('status').textContent = 'KFS2 cannot be placed in first row';
+                        return false;
+                    }
+                    break;
+                    
+                case 'kfs-fake':
+                    if (counts['kfs-fake'] >= 1) {
+                        document.getElementById('status').textContent = 'Maximum KFS Fake markers reached (1)';
+                        return false;
+                    }
+                    if (row === 0) { // Cannot be in first row
+                        document.getElementById('status').textContent = 'KFS Fake cannot be placed in first row';
+                        return false;
+                    }
+                    break;
+            }
+            return true;
+        }
+        
+        // Get marker value for grid storage
+        function getMarkerValue(mode) {
+            switch (mode) {
+                case 'kfs1': return 1;
+                case 'kfs2': return 2;
+                case 'kfs-fake': return 3;
+                default: return 0;
+            }
+        }
+        
+        // Get marker class for CSS
+        function getMarkerClass(value) {
+            switch (value) {
+                case 1: return 'kfs1';
+                case 2: return 'kfs2';
+                case 3: return 'kfs-fake';
+                default: return '';
+            }
+        }
+        
+        // Update cell visual states
+        function updateCellStates() {
+            for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 3; col++) {
+                    const cell = document.getElementById(`cell-${row}-${col}`);
+                    const value = grid[row][col];
+                    
+                    // Remove all marker classes
+                    cell.classList.remove('kfs1', 'kfs2', 'kfs-fake', 'disabled');
+                    
+                    if (value !== 0) {
+                        cell.classList.add(getMarkerClass(value));
+                    } else if (selectedMode && !canPlaceMarker(selectedMode, row, col)) {
+                        cell.classList.add('disabled');
+                    }
+                }
+            }
+        }
+        
+        // Update count displays
+        function updateCounts() {
+            document.getElementById('kfs1-count').textContent = counts.kfs1;
+            document.getElementById('kfs2-count').textContent = counts.kfs2;
+            document.getElementById('kfs-fake-count').textContent = counts['kfs-fake'];
+        }
+        
+        // Clear the grid
+        function clearGrid() {
+            grid = Array(4).fill().map(() => Array(3).fill(0));
+            counts = { 'kfs1': 0, 'kfs2': 0, 'kfs-fake': 0 };
+            selectedMode = null;
+            
+            // Remove active button state
+            document.querySelectorAll('.button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            updateCellStates();
+            updateCounts();
+            document.getElementById('status').textContent = 'Grid cleared. Select a marker type and click on grid cells to place them';
+        }
+        
+        // Random placement function
+        function randomPlacement() {
+            // Clear grid first
+            clearGrid();
+            
+            // Define placement rules
+            const placementRules = {
+                'kfs1': {
+                    maxCount: 3,
+                    validColumns: [0, 2], // leftmost and rightmost columns
+                    validRows: [0, 1, 2, 3] // all rows
+                },
+                'kfs2': {
+                    maxCount: 4,
+                    validColumns: [0, 1, 2], // all columns
+                    validRows: [1, 2, 3] // not first row
+                },
+                'kfs-fake': {
+                    maxCount: 1,
+                    validColumns: [0, 1, 2], // all columns
+                    validRows: [1, 2, 3] // not first row
+                }
+            };
+            
+            // Generate random placements for each marker type
+            Object.keys(placementRules).forEach(markerType => {
+                const rule = placementRules[markerType];
+                const actualCount = rule.maxCount; // Always place maximum count
+                
+                for (let i = 0; i < actualCount; i++) {
+                    let attempts = 0;
+                    let placed = false;
+                    
+                    while (!placed && attempts < 50) { // Prevent infinite loop
+                        const row = rule.validRows[Math.floor(Math.random() * rule.validRows.length)];
+                        const col = rule.validColumns[Math.floor(Math.random() * rule.validColumns.length)];
+                        
+                        if (grid[row][col] === 0) {
+                            grid[row][col] = getMarkerValue(markerType);
+                            counts[markerType]++;
+                            placed = true;
+                        }
+                        attempts++;
+                    }
+                }
+            });
+            
+            updateCellStates();
+            updateCounts();
+            document.getElementById('status').textContent = `Random placement completed! Placed maximum: ${counts.kfs1} KFS1, ${counts.kfs2} KFS2, ${counts['kfs-fake']} KFS Fake`;
+        }
+        
+        // Publish grid to ROS2
+        function publishGrid() {
+            const gridData = {
+                grid: grid,
+                timestamp: Date.now()
+            };
+            
+            const message = new ROSLIB.Message({
+                data: JSON.stringify(gridData)
+            });
+            
+            gridPublisher.publish(message);
+            document.getElementById('status').textContent = 'Grid data published to ROS2!';
+            console.log('Published grid data:', gridData);
+        }
+        
+        // Initialize the interface
+        initializeGrid();
+    </script>
+</body>
+</html>

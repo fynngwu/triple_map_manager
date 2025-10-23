@@ -66,6 +66,7 @@ class MapCreator:
     def load_obstacles_from_config(self, obstacles_config):
         """
         Load obstacles from configuration dictionary.
+        Ignores obstacles with type 'recover' as they are handled by visualization only.
         
         Args:
             obstacles_config (dict): Dictionary containing obstacle definitions
@@ -76,6 +77,10 @@ class MapCreator:
         for obstacle in obstacles_config['obstacles']:
             obstacle_type = obstacle.get('type', 'filled')
             coords = obstacle.get('coordinates', [])
+            
+            # Skip recover type obstacles - they are handled by visualization only
+            if obstacle_type == 'recover':
+                continue
             
             if len(coords) != 4:
                 print(f"Warning: Invalid coordinates for obstacle: {coords}")

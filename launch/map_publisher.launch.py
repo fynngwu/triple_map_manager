@@ -28,7 +28,18 @@ def generate_launch_description():
         output='screen'
     )
     
+    # KFS visualizer node
+    kfs_visualizer_node = Node(
+        package='triple_map_manager',
+        executable='kfs_visualizer',
+        name='kfs_visualizer',
+        output='screen',
+        parameters=[],
+        remappings=[]
+    )
+    
     return LaunchDescription([
         map_publisher_node,
+        kfs_visualizer_node,
         rviz_node
     ])

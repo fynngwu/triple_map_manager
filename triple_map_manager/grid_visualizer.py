@@ -11,13 +11,14 @@ class GridVisualizer:
     Reads parameters from maps_config.yaml and generates visualization_msgs/Marker messages.
     """
     
-    def __init__(self, map_info, map_id):
+    def __init__(self, map_info, map_id, obstacles_config=None):
         """
         Initialize the grid visualizer.
         
         Args:
             map_info (dict): Map information from config
             map_id (int): Map identifier (1, 2, or 3)
+            obstacles_config (dict): Obstacles configuration dictionary
         """
         self.map_info = map_info
         self.map_id = map_id
@@ -25,6 +26,7 @@ class GridVisualizer:
         self.width = map_info['width']
         self.height = map_info['height']
         self.origin = map_info['origin']
+        self.obstacles_config = obstacles_config or {}
         
         # Define colors for different maps
         self.colors = {
@@ -154,3 +156,64 @@ class GridVisualizer:
             marker.points.append(p2)
             
             y += self.grid_spacing
+    
+    def create_recover_areas_marker(self, frame_id="map"):
+        """
+        Create markers for recover areas (red filled rectangles).
+        
+        Args:
+            frame_id (str): Frame ID for the marker
+            
+        Returns:
+            list: List of Marker messages for recover areas
+        """
+        markers = []
+        map_key = f"map{self.map_id}_obstacles"
+        
+        if map_key not in self.obstacles_config:
+            return markers
+        
+        map_obstacles_config = self.obstacles_config[map_key]
+        if 'obstacles' not in map_obstacles_config:
+            return markers
+        
+        marker_id = 0
+        for obstacle in map_obstacles_config['obstacles']:
+            obstacle_type = obstacle.get('type', '')
+            coords = obstacle.get('coordinates', [])
+            
+            if obstacle_type == 'recover' and len(coords) == 4:
+                marker = Marker()
+                marker.header.frame_id = frame_id
+                marker.ns = f"map{self.map_id}_recover"
+                marker.id = marker_id
+                marker.type = Marker.CUBE
+                marker.action = Marker.ADD
+                marker.pose.orientation.w = 1.0
+                
+                x1, y1, x2, y2 = coords
+                
+                # Calculate center position (considering origin offset)
+                center_x = (x1 + x2) / 2.0 + self.origin[0]
+                center_y = (y1 + y2) / 2.0 + self.origin[1]
+                center_z = 0.0
+                
+                marker.pose.position.x = center_x
+                marker.pose.position.y = center_y
+                marker.pose.position.z = center_z
+                
+                # Calculate dimensions
+                marker.scale.x = abs(x2 - x1)
+                marker.scale.y = abs(y2 - y1)
+                marker.scale.z = 0.1  # Small height for visibility
+                
+                # Set red color
+                marker.color.r = 1.0
+                marker.color.g = 0.0
+                marker.color.b = 0.0
+                marker.color.a = 0.8
+                
+                markers.append(marker)
+                marker_id += 1
+        
+        return markers

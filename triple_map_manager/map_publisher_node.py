@@ -63,6 +63,29 @@ class MapPublisherNode(Node):
         except Exception as e:
             self.get_logger().error(f'Failed to load config: {e}')
             raise
+        
+        # Load obstacles configuration
+        self.load_obstacles_config()
+    
+    def load_obstacles_config(self):
+        """Load obstacles configuration from YAML file."""
+        # Try to find obstacles config file in installed package location
+        package_share_directory = get_package_share_directory('triple_map_manager')
+        obstacles_config_path = os.path.join(package_share_directory, 'config', 'obstacles_config.yaml')
+        
+        # Fallback to source directory for development
+        if not os.path.exists(obstacles_config_path):
+            obstacles_config_path = os.path.join(
+                os.path.dirname(__file__), '..', 'config', 'obstacles_config.yaml'
+            )
+        
+        try:
+            with open(obstacles_config_path, 'r') as f:
+                self.obstacles_config = yaml.safe_load(f)
+            self.get_logger().info(f'Loaded obstacles config from {obstacles_config_path}')
+        except Exception as e:
+            self.get_logger().error(f'Failed to load obstacles config: {e}')
+            self.obstacles_config = {}
     
     def load_maps(self):
         """Load all three maps from PGM/YAML files."""
@@ -91,7 +114,7 @@ class MapPublisherNode(Node):
             self.maps[f'map{i}'] = occupancy_grid
             
             # Create grid visualizer
-            self.grid_visualizers[f'map{i}'] = GridVisualizer(map_config, i)
+            self.grid_visualizers[f'map{i}'] = GridVisualizer(map_config, i, self.obstacles_config)
     
     def load_map_from_files(self, pgm_path, yaml_path):
         """
@@ -197,6 +220,11 @@ class MapPublisherNode(Node):
             
             grid_publishers[i-1].publish(grid_marker)
             grid_publishers[i-1].publish(border_marker)
+            
+            # Publish recover area visualizations
+            for recover_marker in grid_visualizer.create_recover_areas_marker():
+                recover_marker.header.stamp = current_time
+                grid_publishers[i-1].publish(recover_marker)
 
 
 def main(args=None):
