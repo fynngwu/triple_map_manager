@@ -1,0 +1,29 @@
+# Obstacles configuration file
+# Defines obstacles for each map
+
+map1_obstacles:
+  obstacles:
+    - type: "filled"
+      coordinates: [2.0, 2.0, 5.0, 4.0]  # [x1, y1, x2, y2] in meters
+    - type: "border"
+      coordinates: [8.0, 6.0, 12.0, 10.0]
+    - type: "filled"
+      coordinates: [15.0, 3.0, 18.0, 8.0]
+
+map2_obstacles:
+  obstacles:
+    - type: "filled"
+      coordinates: [5.0, 5.0, 10.0, 8.0]
+    - type: "border"
+      coordinates: [15.0, 10.0, 20.0, 15.0]
+    - type: "filled"
+      coordinates: [25.0, 2.0, 28.0, 6.0]
+
+map3_obstacles:
+  obstacles:
+    - type: "filled"
+      coordinates: [5.0, 5.0, 15.0, 10.0]
+    - type: "border"
+      coordinates: [20.0, 15.0, 30.0, 20.0]
+    - type: "filled"
+      coordinates: [35.0, 2.0, 38.0, 8.0]
