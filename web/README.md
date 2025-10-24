@@ -17,34 +17,57 @@
 
 ### 1. 启动ROS2服务
 ```bash
-# 启动rosbridge
-ros2 run rosbridge_server rosbridge_websocket
+# 方法1: 一键启动（推荐，最可靠）
+cd /home/wufy/ros2_ws/src/triple_map_manager/web
+./start_kfs.sh
 
-# 启动地图发布和KFS可视化
-ros2 launch triple_map_manager map_publisher.launch.py
+# 方法2: 使用测试脚本
+cd /home/wufy/ros2_ws/src/triple_map_manager/web
+./test_kfs.sh
+
+# 方法3: 清洁版本（无WARN/ERROR，无RViz）
+ros2 launch triple_map_manager kfs_clean.launch.py
+
+# 方法4: 完整系统（包含RViz）
+ros2 launch triple_map_manager kfs_system.launch.py
 ```
 
 ### 2. 打开Web界面
 - **生产版本**: `web/kfs_grid.html`
-- **测试版本**: `web/kfs_grid_test.html` (包含控制台日志)
+- **自动打开**: 使用 `start_kfs.sh` 会自动打开
 
 ### 3. 在RViz中查看
 订阅 `/map2_kfs_markers` 话题查看KFS标记可视化
+
+### 4. 清理系统（如需要）
+如果遇到端口占用或进程冲突问题：
+```bash
+cd /home/wufy/ros2_ws/src/triple_map_manager/web
+./cleanup_kfs.sh
+```
+
 
 ## 📁 文件结构
 
 ```
 web/
 ├── kfs_grid.html              # 生产版本Web界面
-├── kfs_grid_test.html         # 测试版本Web界面
-├── README.md                  # Web界面使用说明
+├── start_kfs.sh              # 一键启动脚本（推荐）
+├── test_kfs.sh               # 一键测试脚本
+├── cleanup_kfs.sh            # 清理脚本
+├── README.md                 # Web界面使用说明
 └── PROJECT_COMPLETION_REPORT.md  # 项目完成度报告
 
+launch/
+├── kfs_clean.launch.py       # 清洁版本launch（推荐）
+├── kfs_complete.launch.py    # 完整系统launch
+└── kfs_system.launch.py      # 完整系统launch（含RViz）
+
 triple_map_manager/
-├── kfs_visualizer_node.py     # KFS可视化ROS2节点
-├── grid_visualizer.py         # 网格可视化器
-├── map_creator.py            # 地图创建器
-└── map_publisher_node.py     # 地图发布节点
+├── kfs_visualizer_node.py    # KFS可视化ROS2节点
+├── grid_visualizer.py        # 网格可视化器
+├── map_creator.py           # 地图创建器
+└── map_publisher_node.py    # 地图发布节点
 ```
 
 ## 🎨 界面预览

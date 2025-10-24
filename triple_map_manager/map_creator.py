@@ -97,15 +97,19 @@ class MapCreator:
             else:
                 print(f"Warning: Unknown obstacle type: {obstacle_type}")
     
-    def export_map(self, filename_base):
+    def export_map(self, filename_base, output_dir=None):
         """
         Export map to PGM and YAML files.
         
         Args:
             filename_base (str): Base filename without extension
+            output_dir (str, optional): Output directory. If None, uses default maps directory
         """
         # Create maps directory if it doesn't exist
-        maps_dir = os.path.join(os.path.dirname(__file__), '..', 'maps')
+        if output_dir is None:
+            maps_dir = os.path.join(os.path.dirname(__file__), '..', 'maps')
+        else:
+            maps_dir = output_dir
         os.makedirs(maps_dir, exist_ok=True)
         
         pgm_path = os.path.join(maps_dir, f"{filename_base}.pgm")

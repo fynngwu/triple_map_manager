@@ -107,7 +107,7 @@ def main():
     create_maps_from_config()
     
     # Create custom map
-    create_custom_map()
+    # create_custom_map()
     
     print("\n" + "=" * 40)
     print("Map creation completed!")

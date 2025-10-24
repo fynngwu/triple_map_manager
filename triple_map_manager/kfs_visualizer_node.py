@@ -3,10 +3,11 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
-from visualization_msgs.msg import Marker
+from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Point
 import json
 import numpy as np
+import time
 
 
 class KFSVisualizerNode(Node):
@@ -24,9 +25,9 @@ class KFSVisualizerNode(Node):
         self.grid_rows = 4
         self.grid_cols = 3
         
-        # Create publisher for KFS markers
+        # Create publisher for KFS markers using MarkerArray
         self.marker_publisher = self.create_publisher(
-            Marker, 
+            MarkerArray, 
             '/map2_kfs_markers', 
             10
         )
@@ -69,11 +70,13 @@ class KFSVisualizerNode(Node):
             msg (std_msgs.msg.String): JSON string containing grid data
         """
         try:
+            self.get_logger().info(f'Received grid data: {msg.data}')
+            
             # Parse JSON data
             grid_data = json.loads(msg.data)
             grid = np.array(grid_data['grid'])
             
-            self.get_logger().info(f'Received grid data: {grid.tolist()}')
+            self.get_logger().info(f'Parsed grid shape: {grid.shape}, content: {grid}')
             
             # Validate grid dimensions
             if grid.shape != (self.grid_rows, self.grid_cols):
@@ -84,6 +87,7 @@ class KFSVisualizerNode(Node):
             self.current_grid = grid
             
             # Publish markers
+            self.get_logger().info('Publishing markers using MarkerArray...')
             self.publish_markers()
             
         except json.JSONDecodeError as e:
@@ -93,27 +97,37 @@ class KFSVisualizerNode(Node):
     
     def publish_markers(self):
         """
-        Publish visualization markers for all KFS markers in the grid.
+        Publish visualization markers for all KFS markers in the grid using MarkerArray.
         """
         current_time = self.get_clock().now().to_msg()
         
         # First, delete all existing markers
         self.delete_all_markers(current_time)
         
-        # Create markers for each KFS type
-        marker_id = 0
+        # Wait for delete operations to propagate
+        time.sleep(0.1)  # 100ms delay
+        
+        # Create MarkerArray for efficient batch publishing
+        marker_array = MarkerArray()
+        marker_count = 0
+        
         for row in range(self.grid_rows):
             for col in range(self.grid_cols):
                 marker_type = self.current_grid[row, col]
                 
                 if marker_type != 0:  # Non-empty cell
+                    # Use a unique ID based on grid position
+                    marker_id = row * self.grid_cols + col
                     marker = self.create_kfs_marker(
                         marker_type, marker_id, row, col, current_time
                     )
-                    self.marker_publisher.publish(marker)
-                    marker_id += 1
+                    marker_array.markers.append(marker)
+                    marker_count += 1
         
-        self.get_logger().info(f'Published {marker_id} KFS markers')
+        # Publish all markers at once
+        if marker_count > 0:
+            self.marker_publisher.publish(marker_array)
+            self.get_logger().info(f'Placed {marker_count} KFS markers on map2 using MarkerArray')
     
     def create_kfs_marker(self, marker_type, marker_id, row, col, timestamp):
         """
@@ -139,9 +153,10 @@ class KFSVisualizerNode(Node):
         
         # Calculate position in map coordinates
         # Map2 origin: [3.2, 1.2, 0.0]
-        # Grid cell (row, col) -> map position
-        x = self.map2_origin[0] + col * self.grid_resolution
-        y = self.map2_origin[1] + row * self.grid_resolution
+        # Grid cell (col, row) -> map position
+        # Add 0.5 * grid_resolution to center the marker in the cell
+        x = self.map2_origin[0] + row * self.grid_resolution + 0.5 * self.grid_resolution
+        y = self.map2_origin[1] + col * self.grid_resolution + 0.5 * self.grid_resolution
         z = 0.0
         
         marker.pose.position.x = x
@@ -160,39 +175,45 @@ class KFSVisualizerNode(Node):
         marker.color.b = self.colors[marker_type][2]
         marker.color.a = self.colors[marker_type][3]
         
-        self.get_logger().debug(f'Created {self.marker_names[marker_type]} marker at ({x:.1f}, {y:.1f})')
+        self.get_logger().info(f'Placed {self.marker_names[marker_type]} at grid({row},{col}) -> map({x:.1f}, {y:.1f})')
         
         return marker
     
     def delete_all_markers(self, timestamp):
         """
-        Delete all existing KFS markers by publishing DELETE actions.
+        Delete all existing KFS markers by publishing DELETE actions using MarkerArray.
         
         Args:
             timestamp: ROS timestamp
         """
-        # Delete markers with IDs 0-11 (maximum possible markers in 4x3 grid)
-        for marker_id in range(12):
-            marker = Marker()
-            marker.header.frame_id = "map"
-            marker.header.stamp = timestamp
-            marker.ns = "map2_kfs"
-            marker.id = marker_id
-            marker.action = Marker.DELETE
-            self.marker_publisher.publish(marker)
+        # Create MarkerArray for efficient batch deletion
+        delete_array = MarkerArray()
+        
+        # Create a general delete for the namespace
+        delete_all_marker = Marker()
+        delete_all_marker.header.frame_id = "map"
+        delete_all_marker.header.stamp = timestamp
+        delete_all_marker.ns = "map2_kfs"
+        delete_all_marker.id = 0
+        delete_all_marker.action = Marker.DELETEALL
+        delete_array.markers.append(delete_all_marker)
+        
+        # Publish the delete array
+        self.marker_publisher.publish(delete_array)
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = KFSVisualizerNode()
-    
     try:
+        node = KFSVisualizerNode()
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass
+    except Exception as e:
+        print(f"Error: {e}")
     finally:
-        node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':

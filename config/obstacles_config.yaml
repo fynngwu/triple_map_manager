@@ -21,7 +21,7 @@ map1_obstacles:
       coordinates: [2.0, 4.8, 3.2, 4.8]  # [x1, y1, x2, y2] in meters
 
 map2_obstacles:
-  obstacles:
+  obstacles: []
 
 map3_obstacles:
   obstacles:

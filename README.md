@@ -1,162 +1,211 @@
-# Triple Map Manager
+# Triple Map Manager - KFS系统
 
-A Python ROS2 package for managing three occupancy grid maps with different resolutions and obstacle drawing capabilities.
+一个基于ROS2的三重地图管理系统，支持Web界面交互式KFS标记放置和可视化。
 
-## Features
+## 📋 项目概述
 
-- **Map Publisher Node**: Publishes three OccupancyGrid maps simultaneously
-- **Obstacle Drawing**: Draw rectangle borders, filled rectangles, and erase areas
-- **Grid Visualization**: RViz markers for visualizing map grids
-- **Configuration System**: YAML-based map and obstacle definitions
-- **Multiple Resolutions**: Support for different map resolutions and origins
+本项目实现了一个完整的三重地图管理系统，包含：
+- **三重地图发布**：map1、map2、map3的独立管理
+- **Web界面**：基于HTML/JavaScript的交互式KFS标记放置
+- **实时可视化**：RViz2中的3D标记显示
+- **ROS2桥接**：WebSocket连接实现Web-ROS2通信
 
-## Package Structure
+## 🏗️ 系统架构
 
 ```
-triple_map_manager/
-├── package.xml
-├── setup.py
-├── config/
-│   ├── maps_config.yaml      # Map parameters
-│   └── obstacles_config.yaml # Obstacle definitions
-├── maps/
-│   └── (generated PGM/YAML files)
-├── launch/
-│   └── map_publisher.launch.py
-├── triple_map_manager/
-│   ├── __init__.py
-│   ├── obstacle_drawer.py     # Obstacle drawing utilities
-│   ├── map_creator.py        # Map creation and export
-│   ├── grid_visualizer.py    # Grid visualization
-│   └── map_publisher_node.py # ROS2 node
-└── example_map_creation.py   # Usage example
+Web界面 (HTML/JS) 
+    ↓ WebSocket
+ROSBridge Server (port 9090)
+    ↓ ROS2 Topics
+KFS Visualizer Node
+    ↓ MarkerArray
+RViz2 (3D Visualization)
+    ↑
+Map Publisher Node (三重地图)
 ```
 
-## Quick Start
+## 📁 文件结构
 
-### 1. Build the Package
+### 核心ROS2节点
+- **`triple_map_manager/map_publisher_node.py`** - 三重地图发布器
+  - 发布map1、map2、map3的occupancy grid
+  - 加载YAML配置文件
+  - 支持动态地图切换
 
+- **`triple_map_manager/kfs_visualizer_node.py`** - KFS标记可视化器
+  - 订阅`/kfs_grid_data` topic
+  - 发布`/map2_kfs_markers` MarkerArray
+  - 4×3网格坐标映射到map2坐标系
+
+### Web界面
+- **`web/kfs_grid.html`** - 主Web界面
+  - 4×3交互式网格
+  - KFS1、KFS2、KFS Fake标记类型
+  - ROSLIB.js WebSocket连接
+  - 实时数据发送到ROS2
+
+### 配置文件
+- **`config/maps_config.yaml`** - 地图配置
+  - 地图文件路径
+  - 坐标系设置
+  - 分辨率参数
+
+- **`config/obstacles_config.yaml`** - 障碍物配置
+  - 静态障碍物定义
+  - 碰撞检测参数
+
+- **`config/default.rviz`** - RViz2配置
+  - 3D显示设置
+  - 地图和标记显示配置
+
+### 地图文件
+- **`maps/map1.pgm`** + **`maps/map1.yaml`** - 地图1
+- **`maps/map2.pgm`** + **`maps/map2.yaml`** - 地图2（KFS标记目标）
+- **`maps/map3.pgm`** + **`maps/map3.yaml`** - 地图3
+
+### Launch文件
+- **`launch/kfs_direct.launch.py`** - 主启动文件
+  - 启动所有必要节点
+  - 延迟2秒打开Web界面
+  - 使用FindPackageShare动态路径
+
+### 工具脚本
+- **`kill_kfs_nodes.sh`** - 一键清理脚本
+  - 精确杀死KFS相关节点
+  - 清理端口9090
+  - 状态验证
+
+## 🔗 文件关联性
+
+### 数据流
+1. **Web → ROS2**：`kfs_grid.html` → ROSBridge → `/kfs_grid_data`
+2. **ROS2 → 可视化**：`/kfs_grid_data` → `kfs_visualizer_node.py` → `/map2_kfs_markers` → RViz2
+3. **地图发布**：`map_publisher_node.py` → `/map1`, `/map2`, `/map3` → RViz2
+
+### 配置依赖
+- `maps_config.yaml` → `map_publisher_node.py`
+- `obstacles_config.yaml` → `map_publisher_node.py`
+- `default.rviz` → RViz2启动
+- `map*.pgm/yaml` → 地图发布
+
+### 启动依赖
+- `kfs_direct.launch.py` → 所有节点和Web界面
+- `kill_kfs_nodes.sh` → 清理和重启
+
+## 🎯 核心功能
+
+### 1. 三重地图管理
+- 独立的地图发布
+- 动态地图切换
+- 配置文件驱动
+
+### 2. KFS标记系统
+- 4×3网格布局
+- 三种标记类型：KFS1、KFS2、KFS Fake
+- 实时坐标映射
+
+### 3. Web界面交互
+- 点击式标记放置
+- 实时数据同步
+- 跨平台兼容
+
+### 4. 3D可视化
+- RViz2集成
+- MarkerArray高效渲染
+- 实时更新
+
+## 🚀 快速启动
+
+### 方法1：一键启动（推荐）
 ```bash
-cd ~/ros2_ws
-colcon build --packages-select triple_map_manager
-source install/setup.bash
+cd /home/wufy/ros2_ws/src/triple_map_manager
+ros2 launch triple_map_manager kfs_direct.launch.py
 ```
 
-### 2. Create Maps
-
+### 方法2：分步启动
 ```bash
-cd ~/ros2_ws/src/triple_map_manager
-python3 example_map_creation.py
-```
-
-This will create three maps with obstacles based on the configuration files.
-
-### 3. Run the Map Publisher
-
-```bash
-# Using launch file
-ros2 launch triple_map_manager map_publisher.launch.py
-
-# Or directly
+# 1. 启动地图发布
 ros2 run triple_map_manager map_publisher
+
+# 2. 启动KFS可视化
+ros2 run triple_map_manager kfs_visualizer
+
+# 3. 启动ROSBridge
+ros2 run rosbridge_server rosbridge_websocket --ros-args -p port:=9090
+
+# 4. 启动RViz2
+rviz2 -d config/default.rviz
+
+# 5. 打开Web界面
+xdg-open web/kfs_grid.html
 ```
 
-### 4. View in RViz
-
-Add the following displays in RViz:
-- **Map** topics: `/map1`, `/map2`, `/map3`
-- **Marker** topics: `/map1_grid`, `/map2_grid`, `/map3_grid`
-
-## Configuration
-
-### Maps Configuration (`config/maps_config.yaml`)
-
-```yaml
-maps:
-  map1:
-    name: "high_resolution_map"
-    resolution: 0.05  # 5cm per cell
-    width: 20.0       # 20 meters
-    height: 15.0      # 15 meters
-    origin: [0.0, 0.0, 0.0]  # [x, y, theta]
+### 一键清理
+```bash
+./kill_kfs_nodes.sh
 ```
 
-### Obstacles Configuration (`config/obstacles_config.yaml`)
+## 🔧 系统要求
 
-```yaml
-map1_obstacles:
-  obstacles:
-    - type: "filled"
-      coordinates: [2.0, 2.0, 5.0, 4.0]  # [x1, y1, x2, y2]
-    - type: "border"
-      coordinates: [8.0, 6.0, 12.0, 10.0]
+- **ROS2 Humble**
+- **Python 3.10+**
+- **现代Web浏览器**
+- **RViz2**
+- **ROSBridge Server**
+
+## 📊 技术特性
+
+- **实时通信**：WebSocket + ROS2 Topics
+- **高效渲染**：MarkerArray批量发布
+- **动态配置**：YAML配置文件
+- **跨平台**：Web界面兼容所有平台
+- **模块化**：独立节点设计
+
+## 🎮 使用说明
+
+1. **启动系统**：运行launch文件
+2. **等待加载**：系统自动打开Web界面
+3. **放置标记**：在4×3网格中点击放置KFS标记
+4. **实时查看**：在RViz2中观察3D标记
+5. **清理重启**：使用kill脚本清理
+
+## 🔍 故障排除
+
+### 常见问题
+- **端口9090被占用**：运行`./kill_kfs_nodes.sh`
+- **Web界面无法连接**：检查ROSBridge状态
+- **标记不显示**：检查RViz2配置
+- **重复节点**：重启ROS2 daemon
+
+### 调试命令
+```bash
+# 检查节点状态
+ros2 node list
+
+# 检查topic
+ros2 topic list
+ros2 topic echo /kfs_grid_data
+
+# 检查连接
+ros2 topic echo /connected_clients
 ```
 
-## API Usage
+## 📈 性能优化
 
-### Map Creator
+- **MarkerArray**：批量发布减少网络开销
+- **软件渲染**：避免GPU兼容性问题
+- **延迟启动**：确保节点稳定启动
+- **精确清理**：避免进程残留
 
-```python
-from triple_map_manager.map_creator import MapCreator
+## 🔮 未来扩展
 
-# Create map
-map_creator = MapCreator(
-    map_name="my_map",
-    resolution=0.1,  # 10cm per cell
-    width=25.0,     # 25 meters
-    height=20.0,    # 20 meters
-    origin=[0.0, 0.0, 0.0]
-)
+- 支持更多地图类型
+- 增加标记动画效果
+- 实现标记历史记录
+- 添加用户权限管理
 
-# Draw obstacles
-map_creator.draw_filled_rectangle(2.0, 2.0, 5.0, 4.0)
-map_creator.draw_rectangle_border(8.0, 6.0, 12.0, 10.0)
-map_creator.erase_rectangle(10.0, 8.0, 11.0, 9.0)
+---
 
-# Export map
-map_creator.export_map("my_map")
-```
-
-### Obstacle Drawer
-
-```python
-from triple_map_manager.obstacle_drawer import ObstacleDrawer
-import numpy as np
-
-# Create grid data
-grid_data = np.zeros((200, 250), dtype=np.int8)
-
-# Create drawer
-drawer = ObstacleDrawer(grid_data, 0.1, 25.0, 20.0, [0.0, 0.0])
-
-# Draw obstacles
-drawer.draw_filled_rectangle(2.0, 2.0, 5.0, 4.0)
-drawer.draw_rectangle_border(8.0, 6.0, 12.0, 10.0)
-drawer.erase_rectangle(10.0, 8.0, 11.0, 9.0)
-```
-
-## Published Topics
-
-### Maps
-- `/map1` (nav_msgs/OccupancyGrid): High resolution map
-- `/map2` (nav_msgs/OccupancyGrid): Medium resolution map  
-- `/map3` (nav_msgs/OccupancyGrid): Low resolution map
-
-### Grid Visualizations
-- `/map1_grid` (visualization_msgs/Marker): Grid lines for map1
-- `/map2_grid` (visualization_msgs/Marker): Grid lines for map2
-- `/map3_grid` (visualization_msgs/Marker): Grid lines for map3
-
-## Dependencies
-
-- `rclpy`: ROS2 Python client library
-- `nav_msgs`: Navigation messages
-- `visualization_msgs`: Visualization messages
-- `geometry_msgs`: Geometry messages
-- `python3-numpy`: Numerical computing
-- `python3-opencv`: Computer vision library
-- `python3-yaml`: YAML parsing
-
-## License
-
-TODO: License declaration
+**项目状态**：✅ 完成并可用  
+**最后更新**：2025年10月24日  
+**维护者**：wufy

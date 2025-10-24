@@ -177,8 +177,13 @@ class GridVisualizer:
         if 'obstacles' not in map_obstacles_config:
             return markers
         
+        # Handle case where obstacles might be None instead of empty list
+        obstacles_list = map_obstacles_config['obstacles']
+        if obstacles_list is None:
+            return markers
+        
         marker_id = 0
-        for obstacle in map_obstacles_config['obstacles']:
+        for obstacle in obstacles_list:
             obstacle_type = obstacle.get('type', '')
             coords = obstacle.get('coordinates', [])
             

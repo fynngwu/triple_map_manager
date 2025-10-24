@@ -3,22 +3,22 @@
 
 maps:
   map1:
-    name: "high_resolution_map"
+    name: "map1"
     resolution: 0.05  # 5cm per cell
-    width: 3.2       # 20 meters
-    height: 6.0      # 15 meters
+    width: 3.2       # 320 cm 
+    height: 6.0      # 600 cm 
     origin: [0.0, 0.0, 0.0]  # [x, y, theta] in meters and radians
     
   map2:
-    name: "medium_resolution_map"
-    resolution: 1.2   # 10cm per cell
-    width: 4.8       # 30 meters
-    height: 3.6      # 20 meters
+    name: "map2"
+    resolution: 1.2   # 120cm per cell
+    width: 4.8       # 480 cm 
+    height: 3.6      # 360 cm 
     origin: [3.2, 1.2, 0.0]  # Offset to the right
     
   map3:
-    name: "low_resolution_map"
-    resolution: 0.05   # 20cm per cell
-    width: 4.0       # 40 meters
-    height: 6.0      # 25 meters
+    name: "map3"
+    resolution: 0.05   # 5cm per cell
+    width: 4.0       # 400 cm 
+    height: 6.0      # 600 cm 
     origin: [8.0, 0.0, 0.0]  # Offset upward

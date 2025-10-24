@@ -1,0 +1,19 @@
+# Test files and outputs
+test/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ROS2 specific
+install/
+build/
+log/
+
+# Shell scripts
+*.sh
+
+# Log files
+*.log

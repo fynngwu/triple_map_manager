@@ -10,6 +10,7 @@ import os
 import cv2
 import numpy as np
 from .grid_visualizer import GridVisualizer
+from .map_creator import MapCreator
 
 
 class MapPublisherNode(Node):
@@ -108,8 +109,11 @@ class MapPublisherNode(Node):
                 self.get_logger().info(f'Loading existing map: {map_name}')
                 occupancy_grid = self.load_map_from_files(pgm_path, yaml_path)
             else:
-                self.get_logger().warn(f'Map files not found: {map_name}. Creating empty map.')
-                occupancy_grid = self.create_empty_map(map_config)
+                self.get_logger().warn(f'Map files not found: {map_name}. Creating map with obstacles.')
+                self.get_logger().info(f'Map config: resolution={map_config["resolution"]}, width={map_config["width"]}, height={map_config["height"]}, origin={map_config["origin"]}')
+                
+                # Create map with obstacles using MapCreator
+                occupancy_grid = self.create_map_with_obstacles(map_config, map_name, maps_dir)
             
             self.maps[f'map{i}'] = occupancy_grid
             
@@ -194,6 +198,63 @@ class MapPublisherNode(Node):
         occupancy_grid.info.origin.orientation.w = 1.0
         
         return occupancy_grid
+    
+    def create_map_with_obstacles(self, map_config, map_name, maps_dir):
+        """
+        Create a map with obstacles using MapCreator and save to files.
+        
+        Args:
+            map_config (dict): Map configuration
+            map_name (str): Name of the map
+            maps_dir (str): Directory to save map files
+            
+        Returns:
+            nav_msgs.msg.OccupancyGrid: Created occupancy grid
+        """
+        # Create map creator
+        map_creator = MapCreator(
+            map_name=map_name,
+            resolution=map_config['resolution'],
+            width=map_config['width'],
+            height=map_config['height'],
+            origin=map_config['origin']
+        )
+        
+        # Load obstacles from config for this specific map
+        map_number = int(map_name.replace('map', ''))  # Extract number from "map1", "map2", etc.
+        map_key = f"map{map_number}_obstacles"
+        if map_key in self.obstacles_config:
+            self.load_obstacles_for_map(map_creator, map_key)
+        
+        # Export map to files
+        map_creator.export_map(map_name, maps_dir)
+        
+        # Get the actual file paths
+        pgm_path = os.path.join(maps_dir, f"{map_name}.pgm")
+        yaml_path = os.path.join(maps_dir, f"{map_name}.yaml")
+        self.get_logger().info(f'Created map files: {pgm_path}, {yaml_path}')
+        
+        # Load the created map
+        return self.load_map_from_files(pgm_path, yaml_path)
+    
+    def load_obstacles_for_map(self, map_creator, map_key):
+        """Load obstacles for a specific map into the map creator."""
+        map_obstacles_config = self.obstacles_config[map_key]
+        if 'obstacles' not in map_obstacles_config:
+            return
+        
+        obstacles_list = map_obstacles_config['obstacles']
+        if obstacles_list is None:
+            return
+        
+        for obstacle in obstacles_list:
+            obstacle_type = obstacle.get('type', '')
+            coords = obstacle.get('coordinates', [])
+            
+            if obstacle_type == 'filled' and len(coords) == 4:
+                x1, y1, x2, y2 = coords
+                map_creator.draw_filled_rectangle(x1, y1, x2, y2)
+                self.get_logger().info(f'Added filled obstacle: ({x1}, {y1}) to ({x2}, {y2})')
     
     def publish_maps(self):
         """Publish all maps and their grid visualizations."""

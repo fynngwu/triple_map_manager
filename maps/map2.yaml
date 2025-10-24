@@ -1,10 +1,10 @@
 free_thresh: 0.25
-image: custom_demo_map.pgm
+image: map2.pgm
 mode: trinary
 negate: 0
 occupied_thresh: 0.65
 origin:
+- 3.2
+- 1.2
 - 0.0
-- 0.0
-- 0.0
-resolution: 0.1
+resolution: 1.2

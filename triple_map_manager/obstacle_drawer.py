@@ -25,7 +25,7 @@ class ObstacleDrawer:
         self.resolution = resolution
         self.width = width
         self.height = height
-        self.origin = origin
+        self.origin = [0.0, 0.0]
         self.height_cells, self.width_cells = grid_data.shape
         
     def _world_to_grid(self, x, y):
