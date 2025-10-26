@@ -201,7 +201,7 @@
                 Clear Grid
             </button>
             
-            <button class="button random-btn" onclick="randomPlacement()">
+            <button class="button random-btn" onclick="randomPlacement(true)">
                 Random Placement (Max)
             </button>
             
@@ -243,11 +243,6 @@
         // ROS connection
         let ros = new ROSLIB.Ros({
             url: 'ws://localhost:9090'
-        });
-        
-        ros.on('connection', function() {
-            console.log('Connected to ROS');
-            document.getElementById('status').textContent = 'Connected to ROS2';
         });
         
         ros.on('error', function(error) {
@@ -430,7 +425,7 @@
         }
         
         // Random placement function
-        function randomPlacement() {
+        function randomPlacement(autoPublish = false) {
             // Clear grid first
             clearGrid();
             
@@ -479,6 +474,11 @@
             updateCellStates();
             updateCounts();
             document.getElementById('status').textContent = `Random placement completed! Placed maximum: ${counts.kfs1} KFS1, ${counts.kfs2} KFS2, ${counts['kfs-fake']} KFS Fake`;
+            
+            // Auto-publish if requested
+            if (autoPublish) {
+                publishGrid();
+            }
         }
         
         // Publish grid to ROS2
@@ -499,6 +499,18 @@
         
         // Initialize the interface
         initializeGrid();
+        
+        // Auto-execute random placement and publish when page loads
+        ros.on('connection', function() {
+            console.log('Connected to ROS');
+            document.getElementById('status').textContent = 'Connected to ROS2 - Auto-executing random placement...';
+            
+            // Wait a bit for connection to stabilize, then execute random placement and publish
+            setTimeout(() => {
+                randomPlacement(true);
+                document.getElementById('status').textContent = 'Page loaded! Random placement auto-executed and published to ROS2.';
+            }, 500);
+        });
     </script>
 </body>
 </html>

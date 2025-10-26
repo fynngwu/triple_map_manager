@@ -30,13 +30,14 @@ class GridVisualizer:
         
         # Define colors for different maps
         self.colors = {
-            1: [1.0, 0.0, 0.0, 0.8],  # Red for map1
+            1: [0.0, 0.0, 1.0, 0.8],  # Blue for map1
             2: [0.0, 1.0, 0.0, 0.8],  # Green for map2
             3: [0.0, 0.0, 1.0, 0.8]   # Blue for map3
         }
         
         # Grid line spacing (every 1 meter)
         self.grid_spacing = map_info['resolution']
+        
     
     def create_grid_marker(self, frame_id="map"):
         """
@@ -55,7 +56,7 @@ class GridVisualizer:
         marker.type = Marker.LINE_LIST
         marker.action = Marker.ADD
         marker.pose.orientation.w = 1.0
-        marker.scale.x = 0.02  # Line width
+        marker.scale.x = 0.01  # Line width
         marker.color.r = self.colors[self.map_id][0]
         marker.color.g = self.colors[self.map_id][1]
         marker.color.b = self.colors[self.map_id][2]

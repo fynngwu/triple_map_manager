@@ -61,6 +61,10 @@ class MapPublisherNode(Node):
             with open(config_path, 'r') as f:
                 self.config = yaml.safe_load(f)
             self.get_logger().info(f'Loaded config from {config_path}')
+            
+            # Get load priority setting (default: False, meaning use config first)
+            self.load_from_files_priority = self.config.get('load_from_files_priority', False)
+            self.get_logger().info(f'Load from files priority: {self.load_from_files_priority}')
         except Exception as e:
             self.get_logger().error(f'Failed to load config: {e}')
             raise
@@ -101,19 +105,23 @@ class MapPublisherNode(Node):
         for i, (map_key, map_config) in enumerate(self.config['maps'].items(), 1):
             map_name = map_config['name']
             
-            # Try to load existing map files
-            pgm_path = os.path.join(maps_dir, f"{map_name}.pgm")
-            yaml_path = os.path.join(maps_dir, f"{map_name}.yaml")
-            
-            if os.path.exists(pgm_path) and os.path.exists(yaml_path):
-                self.get_logger().info(f'Loading existing map: {map_name}')
-                occupancy_grid = self.load_map_from_files(pgm_path, yaml_path)
-            else:
-                self.get_logger().warn(f'Map files not found: {map_name}. Creating map with obstacles.')
+            # Determine load priority based on configuration
+            if not self.load_from_files_priority:
+                # Priority: Create from config first, then load from generated files
+                self.get_logger().info(f'Creating map from config: {map_name}')
                 self.get_logger().info(f'Map config: resolution={map_config["resolution"]}, width={map_config["width"]}, height={map_config["height"]}, origin={map_config["origin"]}')
-                
-                # Create map with obstacles using MapCreator
                 occupancy_grid = self.create_map_with_obstacles(map_config, map_name, maps_dir)
+            else:
+                # Priority: Load from existing files first
+                pgm_path = os.path.join(maps_dir, f"{map_name}.pgm")
+                yaml_path = os.path.join(maps_dir, f"{map_name}.yaml")
+                
+                if os.path.exists(pgm_path) and os.path.exists(yaml_path):
+                    self.get_logger().info(f'Loading existing map from files: {map_name}')
+                    occupancy_grid = self.load_map_from_files(pgm_path, yaml_path)
+                else:
+                    self.get_logger().error(f'Map files not found: {pgm_path}, {yaml_path}')
+                    raise FileNotFoundError(f"Required map files not found for {map_name}. Please create the map files first.")
             
             self.maps[f'map{i}'] = occupancy_grid
             

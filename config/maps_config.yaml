@@ -1,6 +1,11 @@
 # Maps configuration file
 # Defines three maps with different parameters
 
+# Load priority: true = load from files first, false = use config to create maps first
+# Set to true if you want to load existing .pgm and .yaml files from the maps/ directory
+# Set to false if you want to create maps from config and obstacles_config.yaml
+load_from_files_priority: false
+
 maps:
   map1:
     name: "map1"

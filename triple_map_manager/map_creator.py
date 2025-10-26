@@ -100,6 +100,7 @@ class MapCreator:
     def export_map(self, filename_base, output_dir=None):
         """
         Export map to PGM and YAML files.
+        Note: This method will overwrite existing files with the same name.
         
         Args:
             filename_base (str): Base filename without extension
