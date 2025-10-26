@@ -4,20 +4,29 @@
 
 ## 🚀 快速开始
 
-### 1️⃣ 安装依赖
+### 1️⃣ 克隆仓库
+
+首先确保已经安装 ROS2 并创建了工作空间，然后将本仓库克隆到工作空间：
+
+```bash
+cd ~/ros2_ws/src
+git clone https://github.com/fynngwu/triple_map_manager.git
+```
+
+### 2️⃣ 安装依赖
 
 ```bash
 cd ~/ros2_ws
 rosdep install --from-paths src --ignore-src -r -y
 ```
 
-### 2️⃣ 构建包
+### 3️⃣ 构建包
 
 ```bash
 colcon build --packages-select triple_map_manager --symlink-install
 ```
 
-### 3️⃣ 启动系统
+### 4️⃣ 启动系统
 
 ```bash
 source install/setup.bash
@@ -26,7 +35,7 @@ ros2 launch triple_map_manager kfs_direct.launch.py
 
 ---
 
-### 4️⃣ 配置说明
+### 5️⃣ 配置说明
 
 地图参数和障碍物配置在 `config/` 目录中，详见 [配置教程](doc/CONFIG_TUTORIAL.md)。
 
