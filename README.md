@@ -28,7 +28,7 @@ ros2 launch triple_map_manager kfs_direct.launch.py
 
 ### 4️⃣ 配置说明
 
-地图参数和障碍物配置在 `config/` 目录中，详见 [配置教程](CONFIG_TUTORIAL.md)。
+地图参数和障碍物配置在 `config/` 目录中，详见 [配置教程](doc/CONFIG_TUTORIAL.md)。
 
 **发布的话题**：`/map1`, `/map2`, `/map3`（occupancy grid 地图），`/kfs_grid_data`（KFS网格数据）
 ## 📡 发布的话题
@@ -134,11 +134,11 @@ ros2 interface show std_msgs/msg/String
 
 ### 配置文件
 
-所有地图配置和障碍物定义在 `config/` 目录中，详见 [配置教程](CONFIG_TUTORIAL.md)。
+所有地图配置和障碍物定义在 `config/` 目录中，详见 [配置教程](doc/CONFIG_TUTORIAL.md)。
 
 ---
 
 ## 📋 项目概述
 
 本项目实现了一个完整的三重地图管理系统，支持Web界面交互式KFS标记放置和可视化。  
-详细的项目信息（系统架构、文件结构、技术特性等）请参阅 [项目详情](PROJECT_DETAILS.md)。
+详细的项目信息（系统架构、文件结构、技术特性等）请参阅 [项目详情](doc/PROJECT_DETAILS.md)。
