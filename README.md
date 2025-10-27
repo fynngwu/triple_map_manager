@@ -46,8 +46,27 @@ colcon build --packages-select triple_map_manager --symlink-install
 
 ```bash
 source install/setup.bash
-ros2 launch triple_map_manager kfs_direct.launch.py
+ros2 launch triple_map_manager kfs_console.launch.py
 ```
+
+系统会自动完成以下操作：
+1. **随机放置 KFS 标记**：3个 KFS1（蓝色）、4个 KFS2（红色）、1个 KFS Fake（灰色）
+2. **发布到 ROS2**：自动发布 `/kfs_grid_data` 话题
+3. **显示网格状态**：在终端中显示 ASCII 艺术网格布局
+4. **保持运行**：节点保持活跃状态，持续监听 ROS2 系统
+
+**优势**：
+- ✅ 零配置，自动随机放置
+- ✅ 适合 WSL2 环境
+- ✅ 无需用户交互
+- ✅ 自动遵循放置规则
+
+**放置规则**：
+- KFS1: 只能放在左/右列（第0列或第2列），最多3个
+- KFS2: 不能放在第0行，最多4个
+- KFS Fake: 不能放在第0行，最多1个
+
+**查看结果**：在 RViz 中查看可视化标记
 
 ---
 

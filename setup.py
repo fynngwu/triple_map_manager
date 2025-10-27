@@ -30,6 +30,7 @@ setup(
         'console_scripts': [
             'map_publisher = triple_map_manager.map_publisher_node:main',
             'kfs_visualizer = triple_map_manager.kfs_visualizer_node:main',
+            'kfs_console = triple_map_manager.kfs_console_node:main',
         ],
     },
 )
