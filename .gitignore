@@ -15,5 +15,8 @@ log/
 # Shell scripts
 *.sh
 
+# Keep specific script tracked
+!kill_kfs_nodes.sh
+
 # Log files
 *.log
