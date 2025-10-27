@@ -5,6 +5,7 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Point
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSHistoryPolicy, QoSReliabilityPolicy
 import json
 import numpy as np
 import time
@@ -25,19 +26,29 @@ class KFSVisualizerNode(Node):
         self.grid_rows = 4
         self.grid_cols = 3
         
-        # Create publisher for KFS markers using MarkerArray
+        # Configure QoS with transient_local for both subscriber and publisher
+        # This ensures messages persist and can be received by late-connecting subscribers
+        qos_profile = QoSProfile(
+            reliability=QoSReliabilityPolicy.RELIABLE,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1,
+            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL  # Critical: keeps last message
+        )
+        
+        # Create publisher for KFS markers using MarkerArray with persistent QoS
         self.marker_publisher = self.create_publisher(
             MarkerArray, 
             '/map2_kfs_markers', 
-            10
+            qos_profile
         )
         
-        # Create subscriber for grid data
+        # Create subscriber for grid data with matching QoS
+        # This ensures we can receive the last message even if we connect late
         self.grid_subscriber = self.create_subscription(
             String,
             '/kfs_grid_data',
             self.grid_callback,
-            10
+            qos_profile
         )
         
         # Store current grid state

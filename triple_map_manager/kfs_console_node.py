@@ -7,13 +7,14 @@ and publishes to ROS2 topic /kfs_grid_data.
 
 Features:
 - Automatic random marker placement on startup
-- Periodic publishing to ROS2
+- QoS TRANSIENT_LOCAL durability to ensure late subscribers receive messages
 - Perfect for WSL2 environments without GUI
 """
 
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSHistoryPolicy, QoSReliabilityPolicy
 import json
 import random
 
@@ -27,11 +28,20 @@ class KFSConsoleNode(Node):
     def __init__(self):
         super().__init__('kfs_console_node')
         
-        # Create publisher for grid data
+        # Configure QoS with transient_local for message persistence
+        # This ensures subscribers receive the last message even if they connect late
+        qos_profile = QoSProfile(
+            reliability=QoSReliabilityPolicy.RELIABLE,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1,
+            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL  # Critical: keeps last message
+        )
+        
+        # Create publisher for grid data with persistent QoS
         self.grid_publisher = self.create_publisher(
             String,
             '/kfs_grid_data',
-            10
+            qos_profile
         )
         
         # Grid state
@@ -44,7 +54,7 @@ class KFSConsoleNode(Node):
         self.random_placement()
         self.display_grid()
         
-        # Auto-publish
+        # Auto-publish (with QoS TRANSIENT_LOCAL, subscribers will receive this even if they connect late)
         self.publish_grid()
         
         self.get_logger().info('Random placement completed and published')
