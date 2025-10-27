@@ -15,10 +15,26 @@ git clone https://github.com/fynngwu/triple_map_manager.git
 
 ### 2️⃣ 安装依赖
 
+安装所需的依赖：
+
 ```bash
-cd ~/ros2_ws
-rosdep install --from-paths src --ignore-src -r -y
+sudo apt install ros-humble-rclpy ros-humble-nav-msgs ros-humble-std-msgs \
+  ros-humble-visualization-msgs ros-humble-geometry-msgs \
+  ros-humble-rosbridge-suite \
+  python3-numpy python3-opencv python3-yaml
 ```
+
+**依赖库说明**：
+
+- **ros-humble-rclpy**：ROS2 Python 客户端库，用于编写 ROS2 节点和服务
+- **ros-humble-nav-msgs**：导航相关消息类型（如 OccupancyGrid），用于地图数据
+- **ros-humble-std-msgs**：标准消息类型（String, Int32等）
+- **ros-humble-visualization-msgs**：可视化消息（Marker, MarkerArray），用于在 RViz 中显示标记
+- **ros-humble-geometry-msgs**：几何消息类型（Point, Pose等）
+- **ros-humble-rosbridge-suite**：WebSocket 桥接套件，让 Web 界面与 ROS2 通信
+- **python3-numpy**：Python 数值计算库，用于数组操作
+- **python3-opencv**：OpenCV 计算机视觉库，用于图像处理
+- **python3-yaml**：YAML 解析库，用于读取配置文件
 
 ### 3️⃣ 构建包
 
