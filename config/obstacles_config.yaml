@@ -3,6 +3,8 @@
 
 map1_obstacles:
   obstacles:
+    - type: "border"
+      coordinates: [0.0, 0.0, 3.2, 6.0]  # [x1, y1, x2, y2] in meters
     - type: "recover"
       coordinates: [0.0, 0.0, 1.0, 1.0]  # [x1, y1, x2, y2] in meters
     - type: "filled"
@@ -16,15 +18,22 @@ map1_obstacles:
     - type: "filled"
       coordinates: [2.0, 4.8, 2.0, 6.0]  # [x1, y1, x2, y2] in meters
     - type: "filled"
-      coordinates: [2.0, 1.2, 3.2, 1.2]  # [x1, y1, x2, y2] in meters
+      coordinates: [2.0, 1.1, 3.2, 1.3]  # [x1, y1, x2, y2] in meters
     - type: "filled"
-      coordinates: [2.0, 4.8, 3.2, 4.8]  # [x1, y1, x2, y2] in meters
+      coordinates: [2.0, 4.7, 3.2, 4.9]  # [x1, y1, x2, y2] in meters
+    - type: "erase"
+      coordinates: [3.2, 1.2, 3.2, 4.8]  # [x1, y1, x2, y2] in meters
+      
 
 map2_obstacles:
-  obstacles: []
+  obstacles: 
 
 map3_obstacles:
   obstacles:
+    - type: "border"
+      coordinates: [0.0, 0.0, 4.0, 6.0]  # [x1, y1, x2, y2] in meters
+    - type: "erase"
+      coordinates: [0.0, 1.2, 0.0, 4.8]  # [x1, y1, x2, y2] in meters
     - type: "filled"
       coordinates: [0.0, 0.0, 0.0, 1.2]
     - type: "filled"

@@ -263,6 +263,14 @@ class MapPublisherNode(Node):
                 x1, y1, x2, y2 = coords
                 map_creator.draw_filled_rectangle(x1, y1, x2, y2)
                 self.get_logger().info(f'Added filled obstacle: ({x1}, {y1}) to ({x2}, {y2})')
+            if obstacle_type == 'border' and len(coords) == 4:
+                x1, y1, x2, y2 = coords
+                map_creator.draw_rectangle_border(x1, y1, x2, y2)
+                self.get_logger().info(f'Added border obstacle: ({x1}, {y1}) to ({x2}, {y2})')
+            if obstacle_type == 'erase' and len(coords) == 4:
+                x1, y1, x2, y2 = coords
+                map_creator.erase_rectangle(x1, y1, x2, y2)
+                self.get_logger().info(f'Added erase obstacle: ({x1}, {y1}) to ({x2}, {y2})')
     
     def publish_maps(self):
         """Publish all maps and their grid visualizations."""
