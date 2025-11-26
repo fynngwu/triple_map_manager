@@ -2,6 +2,12 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import (
+    QoSProfile,
+    QoSHistoryPolicy,
+    QoSReliabilityPolicy,
+    QoSDurabilityPolicy,
+)
 from nav_msgs.msg import OccupancyGrid
 from visualization_msgs.msg import Marker
 from ament_index_python.packages import get_package_share_directory
@@ -25,23 +31,34 @@ class MapPublisherNode(Node):
         # Load configuration
         self.load_config()
         
+        # QoS profile for latched map topics
+        self.transient_qos = QoSProfile(depth=1)
+        self.transient_qos.history = QoSHistoryPolicy.KEEP_LAST
+        self.transient_qos.reliability = QoSReliabilityPolicy.RELIABLE
+        self.transient_qos.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
+        
         # Create publishers for maps
-        self.map1_pub = self.create_publisher(OccupancyGrid, '/map1', 10)
-        self.map2_pub = self.create_publisher(OccupancyGrid, '/map2', 10)
-        self.map3_pub = self.create_publisher(OccupancyGrid, '/map3', 10)
+        self.map1_pub = self.create_publisher(OccupancyGrid, '/map1', self.transient_qos)
+        self.map2_pub = self.create_publisher(OccupancyGrid, '/map2', self.transient_qos)
+        self.map3_pub = self.create_publisher(OccupancyGrid, '/map3', self.transient_qos)
         
         # Create publishers for grid visualizations
-        self.map1_grid_pub = self.create_publisher(Marker, '/map1_grid', 10)
-        self.map2_grid_pub = self.create_publisher(Marker, '/map2_grid', 10)
-        self.map3_grid_pub = self.create_publisher(Marker, '/map3_grid', 10)
+        self.map1_grid_pub = self.create_publisher(Marker, '/map1_grid', self.transient_qos)
+        self.map2_grid_pub = self.create_publisher(Marker, '/map2_grid', self.transient_qos)
+        self.map3_grid_pub = self.create_publisher(Marker, '/map3_grid', self.transient_qos)
         
         # Load maps
         self.maps = {}
         self.grid_visualizers = {}
         self.load_maps()
+        self.publish_maps()
+        self.get_logger().info('Published static maps with transient local QoS')
         
-        # Create timer for publishing
-        self.timer = self.create_timer(1.0, self.publish_maps)
+        # 创建定时器定期发布 grid markers
+        self.grid_timer = self.create_timer(
+            1.0,  # 每秒发布一次
+            self.publish_grid_markers
+        )
         
         self.get_logger().info('Map Publisher Node started')
     
@@ -278,7 +295,6 @@ class MapPublisherNode(Node):
         
         # Publish maps
         publishers = [self.map1_pub, self.map2_pub, self.map3_pub]
-        grid_publishers = [self.map1_grid_pub, self.map2_grid_pub, self.map3_grid_pub]
         
         for i, (map_key, publisher) in enumerate(zip(self.maps.keys(), publishers), 1):
             # Update header timestamp
@@ -286,7 +302,14 @@ class MapPublisherNode(Node):
             
             # Publish map
             publisher.publish(self.maps[map_key])
-            
+    
+    def publish_grid_markers(self):
+        """Publish grid visualization markers periodically."""
+        current_time = self.get_clock().now().to_msg()
+        
+        grid_publishers = [self.map1_grid_pub, self.map2_grid_pub, self.map3_grid_pub]
+        
+        for i, (map_key, publisher) in enumerate(zip(self.maps.keys(), grid_publishers), 1):
             # Publish grid visualization
             grid_visualizer = self.grid_visualizers[map_key]
             grid_marker = grid_visualizer.create_grid_marker()
@@ -295,13 +318,13 @@ class MapPublisherNode(Node):
             grid_marker.header.stamp = current_time
             border_marker.header.stamp = current_time
             
-            grid_publishers[i-1].publish(grid_marker)
-            grid_publishers[i-1].publish(border_marker)
+            publisher.publish(grid_marker)
+            publisher.publish(border_marker)
             
             # Publish recover area visualizations
             for recover_marker in grid_visualizer.create_recover_areas_marker():
                 recover_marker.header.stamp = current_time
-                grid_publishers[i-1].publish(recover_marker)
+                publisher.publish(recover_marker)
 
 
 def main(args=None):

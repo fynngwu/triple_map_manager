@@ -13,6 +13,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
+        (os.path.join('share', package_name, 'launch'), glob('launch/*.sh')),
         (os.path.join('share', package_name, 'config'), glob('config/*')),
         (os.path.join('share', package_name, 'maps'), glob('maps/*')),
         (os.path.join('share', package_name, 'web'), glob('web/*')),
@@ -31,6 +32,7 @@ setup(
             'map_publisher = triple_map_manager.map_publisher_node:main',
             'kfs_visualizer = triple_map_manager.kfs_visualizer_node:main',
             'kfs_console = triple_map_manager.kfs_console_node:main',
+            'kfs_qos_bridge = triple_map_manager.kfs_qos_bridge_node:main',
         ],
     },
 )

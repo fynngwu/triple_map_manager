@@ -135,3 +135,4 @@ class ObstacleDrawer:
         
         # Clear the rectangle
         self.grid_data[gy1:gy2+1, gx1:gx2+1] = 0
+

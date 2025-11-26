@@ -6,13 +6,18 @@ from launch_ros.actions import Node
 from launch.actions import ExecuteProcess, TimerAction
 from launch_ros.substitutions import FindPackageShare
 from launch.substitutions import PathJoinSubstitution
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     """Generate launch description for KFS system - with cleanup first."""
     
+        # Get package share directory to find the cleanup script
+    package_share_directory = get_package_share_directory('triple_map_manager')
+    cleanup_script_path = os.path.join(package_share_directory, 'launch', 'kill_kfs_nodes.sh')
+    
     # Cleanup process - run first to kill any existing nodes
     cleanup_process = ExecuteProcess(
-        cmd=['bash', '-c', 'cd /home/wufy/ros2_ws/src/triple_map_manager && ./kill_kfs_nodes.sh && sleep 2'],
+        cmd=['bash', cleanup_script_path],
         name='cleanup_process',
         output='screen'
     )
@@ -44,6 +49,14 @@ def generate_launch_description():
             'call_services_in_new_thread': True,
             'send_action_goals_in_new_thread': True,
         }],
+        output='screen'
+    )
+    
+    # KFS QoS Bridge node - forwards messages from rosbridge with correct QoS
+    kfs_qos_bridge_node = Node(
+        package='triple_map_manager',
+        executable='kfs_qos_bridge',
+        name='kfs_qos_bridge',
         output='screen'
     )
     
@@ -83,11 +96,12 @@ def generate_launch_description():
     
     # Delay all other nodes to allow cleanup to complete
     delayed_nodes = TimerAction(
-        period=5.0,
+        period=4.0,
         actions=[
             map_publisher_node,
             kfs_visualizer_node,
             rosbridge_node,
+            kfs_qos_bridge_node,  # QoS bridge node
             rviz_node,
             delayed_html_process,
         ]

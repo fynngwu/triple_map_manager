@@ -130,7 +130,7 @@ fi
 # 最终状态检查
 echo ""
 echo "=== 最终状态检查 ==="
-cd /home/wufy/ros2_ws && source install/setup.bash 2>/dev/null
+# cd /home/wufy/ros2_ws && source install/setup.bash 2>/dev/null
 if ros2 node list 2>/dev/null | grep -E "(map_publisher_main|kfs_visualizer_main|rosbridge_main|rviz2)" >/dev/null; then
     echo "❌ 仍有KFS节点在运行:"
     ros2 node list 2>/dev/null | grep -E "(map_publisher_main|kfs_visualizer_main|rosbridge_main|rviz2)"

@@ -6,16 +6,12 @@ from launch_ros.actions import Node
 from launch.actions import ExecuteProcess, TimerAction
 from launch_ros.substitutions import FindPackageShare
 from launch.substitutions import PathJoinSubstitution
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     """Generate launch description for KFS system using console interface."""
     
-    # Cleanup process - run first to kill any existing nodes
-    cleanup_process = ExecuteProcess(
-        cmd=['bash', '-c', 'cd /home/wufy/ros2_ws/src/triple_map_manager && ./kill_kfs_nodes.sh && sleep 2'],
-        name='cleanup_process',
-        output='screen'
-    )
+
     
     # Map publisher node with unique name
     map_publisher_node = Node(
@@ -58,7 +54,7 @@ def generate_launch_description():
     
     # Delay all other nodes to allow cleanup to complete
     delayed_nodes = TimerAction(
-        period=5.0,
+        period=1.0,
         actions=[
             map_publisher_node,
             kfs_visualizer_node,
@@ -68,7 +64,6 @@ def generate_launch_description():
     )
     
     return LaunchDescription([
-        cleanup_process,
         delayed_nodes,
     ])
 

@@ -163,3 +163,4 @@ class MapCreator:
             'height_cells': self.height_cells,
             'origin': self.origin
         }
+

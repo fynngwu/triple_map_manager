@@ -46,3 +46,4 @@ map3_obstacles:
       coordinates: [1.45, 3.5, 1.75, 5.0]
     - type: "recover"
       coordinates: [3.0, 0.0, 4.0, 1.0]
+
