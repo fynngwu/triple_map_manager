@@ -44,6 +44,17 @@ colcon build --packages-select triple_map_manager --symlink-install
 
 ### 4️⃣ 启动系统
 
+本包提供了多个 launch 文件，位于 `launch/` 目录：
+
+#### Launch 文件列表
+
+| Launch 文件 | 路径 | 说明 |
+|------------|------|------|
+| `kfs_console.launch.py` | `launch/kfs_console.launch.py` | 控制台版本，无需 Web 界面 |
+| `kfs_direct.launch.py` | `launch/kfs_direct.launch.py` | 完整版本，包含 Web 界面和 rosbridge |
+
+#### 使用控制台版本（推荐）
+
 ```bash
 source install/setup.bash
 ros2 launch triple_map_manager kfs_console.launch.py
@@ -67,6 +78,21 @@ ros2 launch triple_map_manager kfs_console.launch.py
 - KFS Fake: 不能放在第0行，最多1个
 
 **查看结果**：在 RViz 中查看可视化标记
+
+#### 使用完整版本（带 Web 界面）
+
+```bash
+source install/setup.bash
+ros2 launch triple_map_manager kfs_direct.launch.py
+```
+
+此版本包含：
+- ✅ 所有控制台版本的功能
+- ✅ Web 界面（通过 rosbridge）
+- ✅ 交互式 KFS 标记放置
+- ✅ 实时可视化更新
+
+**Web 界面访问**：启动后访问 `http://localhost:9090` 打开 Web 界面
 
 ---
 
