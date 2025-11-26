@@ -50,6 +50,7 @@ def generate_launch_description():
         name='rviz2',
         arguments=['-d', rviz_config_path],
         output='screen'
+        environment={'QT_QPA_PLATFORM': 'xcb'} 
     )
     
     # Delay all other nodes to allow cleanup to complete

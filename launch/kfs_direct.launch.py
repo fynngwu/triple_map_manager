@@ -91,12 +91,13 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         arguments=['-d', rviz_config_path],
-        output='screen'
+        output='screen',
+        environment={'QT_QPA_PLATFORM': 'xcb'} 
     )
     
     # Delay all other nodes to allow cleanup to complete
     delayed_nodes = TimerAction(
-        period=4.0,
+        period=3.0,
         actions=[
             map_publisher_node,
             kfs_visualizer_node,
