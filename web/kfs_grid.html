@@ -51,7 +51,7 @@
         }
         
         .kfs1-btn {
-            background-color: #4CAF50;
+            background-color: #0000FF;
             color: white;
         }
         
@@ -285,7 +285,7 @@
         <h3>Placement Rules:</h3>
         <ul>
             <li><strong>KFS1 (Blue):</strong> Only leftmost and rightmost columns, maximum 3 total</li>
-            <li><strong>KFS2 (Red):</strong> Cannot be placed in first row, maximum 4 total</li>
+            <li><strong>KFS2 (Red):</strong> Cannot be placed in any cell, maximum 4 total</li>
             <li><strong>KFS Fake (Gray):</strong> Cannot be placed in first row, maximum 1 total</li>
         </ul>
         <h3>Usage Tips:</h3>
@@ -443,10 +443,7 @@
                         document.getElementById('status').textContent = 'Maximum KFS2 markers reached (4)';
                         return false;
                     }
-                    if (row === 0) { // Cannot be in first row
-                        document.getElementById('status').textContent = 'KFS2 cannot be placed in first row';
-                        return false;
-                    }
+                    
                     break;
                     
                 case 'kfs-fake':
@@ -541,7 +538,7 @@
                 'kfs2': {
                     maxCount: 4,
                     validColumns: [0, 1, 2], // all columns
-                    validRows: [1, 2, 3] // not first row
+                    validRows: [0, 1, 2, 3] // not first row
                 },
                 'kfs-fake': {
                     maxCount: 1,

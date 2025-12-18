@@ -82,6 +82,9 @@ ros2 launch triple_map_manager kfs_console.launch.py
 #### 使用完整版本（带 Web 界面）
 
 ```bash
+#下载依赖
+sudo apt install xdg-utils firefox -y
+pip3 install "numpy<2"
 source install/setup.bash
 ros2 launch triple_map_manager kfs_direct.launch.py
 ```
